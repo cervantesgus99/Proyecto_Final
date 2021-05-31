@@ -1,0 +1,87 @@
+#include <Servo.h>
+#define ECHO 8
+#define TRIGGER 7
+int deistancia,i=0,x,num=1,ang=0;
+Servo myservo; 
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(ECHO,INPUT);
+  pinMode(TRIGGER, OUTPUT);
+  myservo.attach(3); 
+}
+
+void loop() {
+    char cont='A';
+
+    Serial.println("Recorrido " + String (num));
+
+    while(i<=110)
+    {
+ //MOTOR
+      myservo.write(i);
+      //Serial.println("El angulo es: "+ String(i-10)); //Se imprime en pantalla el angulo en el cual se encuntre el motor rotado
+
+ //SENSOR
+      int tiempo, distancia;
+      digitalWrite(TRIGGER, LOW);
+      delayMicroseconds(5);
+      digitalWrite(TRIGGER, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(TRIGGER, LOW);
+      tiempo= pulseIn(ECHO,HIGH);
+      distancia= tiempo/58;
+      //Serial.println("La distancia en cm es: "+ String(distancia)); //Se imprime en la pantalla la distancia en cm a la cual se encuentra un objeto
+//OBJETO
+
+      delay(1000);
+
+ //CALCULOS
+      float x,y,coordenadas;
+
+      y= abs(distancia*sin(i));     
+      //Serial.println("La coordenada en y es: "+String(y));   //calculamos y mostramos en pantalla la coordenada en y
+
+      x = sqrt(distancia*distancia-y*y);
+      //Serial.println("La coordenada en x es: "+String(x));   //calculamos y mostramos en pantalla la coordenada en x
+      Serial.println();
+
+      if(distancia <=70)
+      {
+       ang=ang+1;
+      }
+      if(ang>1&&ang<3)
+      {
+      Serial.println("Objeto : "+String(cont));
+      Serial.println("El angulo es: "+ String(i-10));
+      Serial.println("La distancia en cm es: "+ String(distancia));
+      Serial.println("La coordenada en x es: "+String(x));
+      Serial.println("La coordenada en y es: "+String(y));
+      cont=cont+1;
+      }
+      if(ang>4&&ang<6)
+      {
+      Serial.println("Objeto : "+String(cont));
+      Serial.println("El angulo es: "+ String(i-10));
+      Serial.println("La distancia en cm es: "+ String(distancia));
+      Serial.println("La coordenada en x es: "+String(x));
+      Serial.println("La coordenada en y es: "+String(y));
+      cont=cont+1;
+      }
+      if(ang>7&&ang<9)
+      {
+      Serial.println("Objeto : "+String(cont));
+      Serial.println("El angulo es: "+ String(i-10));
+      Serial.println("La distancia en cm es: "+ String(distancia));
+      Serial.println("La coordenada en x es: "+String(x));
+      Serial.println("La coordenada en y es: "+String(y));
+      cont=cont+1;
+      }
+      delay(1000);
+
+      i=i+5;                                                 //giramos el motor +5 grados
+      }
+   num=num+1;
+   i=0;                                                      //regresamos el motor a su posicion inicial de 0 grados
+
+}
