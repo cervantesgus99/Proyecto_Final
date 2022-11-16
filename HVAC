@@ -1,0 +1,601 @@
+#include "thingProperties.h"
+
+const int pinBuzzer = 13;//alarma
+
+ const int ledPin = 0;//sensor flama
+const int digitalPin = 18;//sensor flama
+const int analogPin=32;//sensor flama
+
+
+int digitalVal; //sensor flama
+int analogVal; // sensor flama
+
+#define MQ2pin (33) //sensor gas
+float sensorValue; //sensor gas
+
+int Led=18;       //pin del led mag
+int pin_digital = 5//pin de señal de sensor mag
+;int  val;//variable para almacenar un valor mag
+
+
+
+#include <OneWire.h>                 //Se importan las librerías
+#include <DallasTemperature.h>
+#define Pin 22  //Se declara el pin donde se conectará la DATA  22 wifi
+const int pinDatosDQ=22;
+OneWire ourWire(Pin);    //Se establece el pin declarado como bus para la comunicación OneWire
+OneWire oneWireObjeto(pinDatosDQ);
+DallasTemperature sensorDS18B20(&oneWireObjeto); //Se llama a la librería DallasTemperature
+
+
+
+
+// Incluimos librería
+#include <DHT.h>
+ 
+// Definimos el pin digital donde se conecta el sensor
+#define DHTPIN 23
+// Dependiendo del tipo de sensor
+#define DHTTYPE DHT11
+ 
+// Inicializamos el sensor DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+
+int pin_1=21; //21 wifi
+int pin_2=19; //19 wifi
+int pin_3=4;//18 wifi
+
+
+void setup() {
+  // Initialize serial and wait for port to open:
+  Serial.begin(9600);
+  // This delay gives the chance to wait for a Serial Monitor without blocking if none is found
+  
+  pinMode(Led,OUTPUT);//define LED como salida mag
+  pinMode(pin_digital = 5,INPUT);//define señal sensor como entrada mag
+  
+   pinMode(pin_1, OUTPUT);
+  pinMode(pin_2, OUTPUT);
+  pinMode(pin_3, OUTPUT);
+  sensorDS18B20.begin();
+  
+  pinMode(ledPin, OUTPUT); //sensor flma 
+  pinMode(digitalPin, INPUT); // sensor flama
+  
+  Serial.println(F("Flame Sensor Initialized"));
+  
+  
+  Serial.println("El sensor de gas se esta calentando!"); //sensor gas
+  delay(2000); //sensor gas
+  
+  
+  dht.begin();
+  // Defined in thingProperties.h
+  initProperties();
+
+  // Connect to Arduino IoT Cloud
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+  
+  /*
+     The following function allows you to obtain more information
+     related to the state of network and IoT Cloud connection and errors
+     the higher number the more granular information you’ll get.
+     The default is 0 (only errors).
+     Maximum is 4
+ */
+  setDebugMessageLevel(2);
+  ArduinoCloud.printDebugInfo();
+}
+
+void loop() {
+  ArduinoCloud.update();
+  
+  // Your code here 
+  //alarma_sensorflama();
+  
+//estado_sensorm();
+onDesactivarAlarmChange();
+ /*
+  digitalVal = digitalRead(digitalPin);
+  if (digitalVal == HIGH){
+    digitalWrite(digitalPin, HIGH);
+    Serial.println(F("    -> Flame detected"));
+       message="Flame detected";
+    
+    delay(10000);
+  }*/
+  
+ /* //GAS
+  sensorValue = analogRead(MQ2pin); // read analog input pin 0
+  Serial.print("Valor detectado por el sensor: ");
+  Serial.print(sensorValue);
+  
+  if(sensorValue >= 180)
+  {
+   Serial.print(" | Se detectó humo!");
+   message=" Se detectó humo!";
+
+      delay(3000);
+  }*/
+ //DHT_SENSOR_READ();
+  
+  
+    
+  
+
+}
+
+
+
+void DHT_SENSOR_READ(){
+  
+  delay(2000);
+  
+   sensorDS18B20.requestTemperatures();       //Prepara el sensor para la lectura
+Serial.print(sensorDS18B20.getTempCByIndex(0)); //Se lee e imprime la temperatura en grados Centigrados
+Serial.println(" Grados Centigrados LF");
+
+
+
+
+
+ sensorDS18B20.requestTemperatures();       //Prepara el sensor para la lectura
+Serial.print(sensorDS18B20.getTempCByIndex(1)); //Se lee e imprime la temperatura en grados Centigrados
+Serial.println(" Grados Centigrados LC");
+
+
+//float h = dht.readHumidity(); //Leemos la Humedad  PRUEBA
+//float t = dht.readTemperature(); //Leemos la temperatura en grados Celsius   PRUEBA
+  //Serial.print("Humedad ");
+  //Serial.print(h);
+  //Serial.print(" %t");
+  //Serial.print("Temperatura: ");
+  //Serial.print(t);
+ // Serial.print(" *C ");
+ 
+
+  
+  
+ //digitalWrite(pin_1, LOW); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+ //digitalWrite(pin_2, HIGH); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+ //digitalWrite(pin_3, LOW); //VENTILADOR FRIO    //HIGH APGADO     -     LOW ENCENDIDO
+ 
+  // Leemos la humedad relativa
+  float h = dht.readHumidity();
+  // Leemos la temperatura en grados centígrados (por defecto)
+  float t = dht.readTemperature();
+  // Leemos la temperatura en grados Fahrenheit
+  float f = dht.readTemperature(true);
+  
+
+ 
+  // Comprobamos si ha habido algún error en la lectura
+  if (isnan(h) || isnan(t) || isnan(f)) {
+    Serial.println("Error obteniendo los datos del sensor DHT11");
+    return;
+  }
+ 
+  // Calcular el índice de calor en Fahrenheit
+  float hif = dht.computeHeatIndex(f, h);
+  // Calcular el índice de calor en grados centígrados
+  float hic = dht.computeHeatIndex(t, h, false);
+  
+    /*
+  Since SwitchHot is READ_WRITE variable, onSwitchHotChange() is
+  executed every time a new value is received from IoT Cloud.
+  
+    }*/
+        
+        
+  temperatura_F = f;
+  humedad = h;
+  indice_calor_Cent=hic;
+   indice_calor_Far=hif;
+    temperatura = t;
+    temp_ladoF=sensorDS18B20.getTempCByIndex(0);
+    temp_ladoC=sensorDS18B20.getTempCByIndex(1);
+    
+    /*onSwitchCalienteChange();
+  onSwitchColdChange();
+  onSwitchPeltierChange();
+  CambioEstado(); */
+
+   // if(temperatura>=22 && temperatura<=19){
+     //  digitalWrite(pin_1, LOW); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+     //  digitalWrite(pin_2, LOW); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+      // digitalWrite(pin_3, HIGH);
+      // Serial.println("HOLA GUS");
+      //   delay(5000);
+    // }
+    
+    
+    
+
+
+  /* 
+   if(temperatura>=14){
+    digitalWrite(pin_1, HIGH); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+    digitalWrite(pin_2, LOW); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+    digitalWrite(pin_3, LOW);
+    Serial.println("HOLA GUS");
+  }
+  
+  
+  
+  
+      if(temperatura==14){
+  digitalWrite(pin_1, temperatura);
+  digitalWrite(pin_2, temperatura);
+    
+    if(temperatura>=14 || temperatura<=15){
+      digitalWrite(pin_1, temperatura);
+      digitalWrite(pin_1, temperatura);
+      
+    }
+  }
+   */ 
+   
+    
+ //onSwitchCalienteChange();
+  //onSwitchColdChange();
+  //onSwitchPeltierChange();
+    
+   /* 
+     
+  if(temperatura>=14){
+    digitalWrite(pin_1, HIGH); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+    digitalWrite(pin_2, LOW); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+    digitalWrite(pin_3, LOW);
+  }
+  
+  if(temperatura==14){
+  digitalWrite(pin_1, temperatura);
+  digitalWrite(pin_2, temperatura);
+    
+    if(temperatura>=14 || temperatura<=15){
+      digitalWrite(pin_1, temperatura);
+      digitalWrite(pin_1, temperatura);
+      
+    }
+  }
+  
+   
+   
+   
+   
+   if(temperatura==20){
+      digitalWrite(pin_1, HIGH); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_2, HIGH); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_3, LOW); //VENTILADOR FRIO    //HIGH APGADO     -     LOW ENCENDIDO
+    }
+    
+    if(temperatura==22){
+      digitalWrite(pin_1, HIGH); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_2, HIGH); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_3, LOW); //VENTILADOR FRIO    //HIGH APGADO     -     LOW ENCENDIDO
+    }
+  
+    
+    
+    
+   if(temperatura==14.5){
+      digitalWrite(pin_1, HIGH); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_2, HIGH); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_3, LOW); //VENTILADOR FRIO    //HIGH APGADO     -     LOW ENCENDIDO
+    }
+    
+    if(temperatura==20){
+      digitalWrite(pin_1, HIGH); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_2, HIGH); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_3, LOW); //VENTILADOR FRIO    //HIGH APGADO     -     LOW ENCENDIDO
+    }
+      
+     
+    
+   
+   if(t==24){
+      digitalWrite(pin_1, LOW);
+    }
+    for(int i=0; i>1000; i++){
+      //VARIABLE SLIDER = t
+      //VARIABLE SLIDER == 15 && VARIABLE SLIDER== 20 
+      
+      if(t<24){//variable del slider
+        digitalWrite(pin_3, LOW);
+      }
+      else{
+       digitalWrite(pin_3, HIGH);
+      }
+       
+    }*/
+        
+    
+ //CHECAR analogWrite(t, temperatura);
+ 
+  Serial.print("Humedad: ");
+  Serial.print(h);
+  Serial.print(" %\t");
+  Serial.print("Temperatura: ");
+  Serial.print(t);
+  Serial.print(" *C ");
+  Serial.print(f);
+  Serial.print(" *F\t");
+  Serial.print("Índice de calor: ");
+  Serial.print(hic);
+  Serial.print(" *C ");
+  Serial.print(hif);
+  Serial.println(" *F");
+  
+   /*if(temperatura>=16){
+       digitalWrite(pin_1, LOW); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_2, LOW); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+       digitalWrite(pin_3, LOW);
+       Serial.println("HOLA GUS");
+         
+     }
+     
+     onTemperaturaChange();*/
+    /*if(temperatura<=15){
+      digitalWrite(pin_1, LOW); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_2, LOW); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+       digitalWrite(pin_3, LOW);
+       
+       delay(10000);
+       
+       digitalWrite(pin_1, LOW); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_2, LOW); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+       digitalWrite(pin_3, HIGH);
+        delay(10000);
+    }
+    */
+}
+
+
+
+
+/*
+  Since SwitchHot is READ_WRITE variable, onSwitchHotChange() is
+  executed every time a new value is received from IoT Cloud.
+*/
+void onSwitchHotChange()  {
+  // Add your code here to act upon SwitchHot change
+}
+/*
+  Since SwitchCaliente is READ_WRITE variable, onSwitchCalienteChange() is
+  executed every time a new value is received from IoT Cloud.
+*/
+void onSwitchCalienteChange()  {/*
+  // Add your code here to act upon SwitchCaliente change
+  if(switch_hot == true){
+    digitalWrite(pin_1, HIGH);
+}
+
+else{
+    digitalWrite(pin_1, LOW);
+}*/
+
+}
+
+
+
+/*
+  Since SwitchCold is READ_WRITE variable, onSwitchColdChange() is
+  executed every time a new value is received from IoT Cloud.
+*/
+void onSwitchColdChange()  {/*
+  // Add your code here to act upon SwitchCold change
+  
+    if(switch_cold == true){
+    digitalWrite(pin_3, HIGH);
+}
+
+else{
+    digitalWrite(pin_3, LOW);
+}*/
+
+}
+/*
+  Since SwitchPeltier is READ_WRITE variable, onSwitchPeltierChange() is
+  executed every time a new value is received from IoT Cloud.
+  
+  
+  
+  
+*/
+void onSwitchPeltierChange()  {/*
+  // Add your code here to act upon SwitchPeltier change
+    
+    if(switch_peltier == true){
+    digitalWrite(pin_2, HIGH);
+}
+
+else{
+    digitalWrite(pin_2, LOW);
+}
+*/
+}
+
+void estado_sensorm() {
+  val=digitalRead(pin_digital = 5);//lee el valor de la entrada digital
+if(val==HIGH)//Cuando el sensor detecta campo, el LED se encienda.
+{
+digitalWrite(Led,HIGH);
+ estado_puerta=true;
+ Serial.println("PUERTA ABIERTA");
+ 
+  digitalWrite(pin_1, HIGH); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+  digitalWrite(pin_2, HIGH); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+  digitalWrite(pin_3, HIGH);
+  
+  
+ 
+ 
+}
+else        //si no detecta el LED se apaga
+{
+digitalWrite(Led,LOW);
+estado_puerta=false;
+if(temperatura>=16){
+       digitalWrite(pin_1, LOW); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_2, LOW); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+       digitalWrite(pin_3, LOW);
+       Serial.println("HOLA GUS");
+         
+     }
+     
+     onTemperaturaChange();
+ DHT_SENSOR_READ();
+}
+
+}
+
+
+
+
+
+/*
+  Since Temperatura is READ_WRITE variable, onTemperaturaChange() is
+  executed every time a new value is received from IoT Cloud.
+*/
+void onTemperaturaChange()  {
+  // Add your code here to act upon Temperatura change
+    //temperatura=dht.readTemperature();
+    if(temperatura==14.5 || temperatura==14.6 || temperatura==14.7 || temperatura==14.8 || temperatura==14.9 || temperatura==15) {
+      digitalWrite(pin_1, LOW); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+      digitalWrite(pin_2, LOW); //PLACA PELTIER   
+      digitalWrite(pin_3, HIGH);
+      
+    }
+  
+}
+
+void CambioEstado()  {/*
+  // Add your code here to act upon Temperatura change
+  if( sensorDS18B20.getTempCByIndex(1)>=40){
+    digitalWrite(pin_1, LOW); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+    digitalWrite(pin_2, LOW); //PLACA PELTIER   
+    
+    
+  }
+  */
+  
+}
+
+void alarma_sensorflama(){/*
+  
+  digitalVal = digitalRead(digitalPin);
+  if (digitalVal == HIGH){
+    digitalWrite(ledPin, HIGH);
+    Serial.println(F("    -> Flame detected"));
+     //generar tono de 440Hz durante 1000 ms
+   // digitalWrite(pin_1, HIGH); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+    //digitalWrite(pin_2, HIGH); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+    //digitalWrite(pin_3, HIGH);
+  
+    tone(pinBuzzer, 440);
+    delay(100000000000000);
+  
+//BOTON PARA DETENER ALARMA 
+
+
+  //detener tono durante 500ms  
+ // noTone(pinBuzzer);
+  //delay(500);
+
+  //generar tono de 523Hz durante 500ms, y detenerlo durante 500ms.
+ // tone(pinBuzzer, 523, 300);
+ //delay(5000);
+    
+  }else{
+    digitalWrite(ledPin, LOW); 
+  }
+
+  // Read the analog interface
+  analogVal = analogRead(analogPin);
+  Serial.print(F("Sensor Value"));Serial.println(analogVal);
+  */
+}
+  //SENSOR GAS
+  /*
+  sensorValue = analogRead(MQ2pin); // read analog input pin 0
+  Serial.print("Valor detectado por el sensor: ");
+  Serial.print(sensorValue);
+  if(sensorValue > 1200)
+  {
+   Serial.print(" | Se detectó humo!");
+   tone(pinBuzzer, 440);
+  delay(100000000000000);
+
+  //detener tono durante 500ms  
+  noTone(pinBuzzer);
+  delay(500);
+
+  //generar tono de 523Hz durante 500ms, y detenerlo durante 500ms.
+  tone(pinBuzzer, 523, 300);
+  delay(500);
+  
+   
+  }
+  Serial.println("");
+  delay(2000); // espera por 2 segundos para la siguiente lectura
+  
+}
+/*
+  Since DesactivarAlarm is READ_WRITE variable, onDesactivarAlarmChange() is
+  executed every time a new value is received from IoT Cloud.
+*/
+void onDesactivarAlarmChange()  {
+  // Add your code here to act upon DesactivarAlarm change
+  estado_sensorm();
+  if(desactivar_alarm==true){
+    //digitalWrite(digitalPin,HIGH);
+    //digitalWrite(analogPin,HIGH);
+    //digitalWrite(pinBuzzer,HIGH);
+  digitalVal = digitalRead(digitalPin);
+  if (digitalVal == HIGH){
+    digitalWrite(digitalPin, HIGH);
+    Serial.println(F("    -> Flame detected"));
+       message="Flame detected";
+    
+    digitalWrite(pin_1, HIGH); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+  digitalWrite(pin_2, HIGH); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+  digitalWrite(pin_3, HIGH);
+    delay(10000);
+  
+
+  }
+  //GAS
+  sensorValue = analogRead(MQ2pin); // read analog input pin 0
+  Serial.print("Valor detectado por el sensor: ");
+  Serial.print(sensorValue);
+  
+  if(sensorValue >= 180)
+  {
+   Serial.print(" | Se detectó humo!");
+   message=" Se detectó humo!";
+digitalWrite(pin_1, HIGH); //VENTILADOR CALIENTE  //HIGH APGADO     -     LOW ENCENDIDO
+  digitalWrite(pin_2, HIGH); //PLACA PELTIER      //HIGH APGADO     -     LOW ENCENDIDO
+  digitalWrite(pin_3, HIGH);
+      delay(10000);
+  }
+  //delay(2000); // espera por 2 segundos para la siguiente lectura
+  
+
+  }  
+  
+else{
+  Serial.println("SISTEMA APAGADO");
+  
+   estado_sensorm();
+    
+        Serial.println("PUERTA CERRADA");
+           
+  
+  
+}
+}
+
+void onMessageChange(){
+  
+}
